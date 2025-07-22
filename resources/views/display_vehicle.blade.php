@@ -230,7 +230,7 @@
         <div class="vehicle-container">
             <!-- Vehicle Gallery -->
             <div class="vehicle-gallery">
-                <img id="main-image" src="{{ asset('storage/' . $vehicle->images->first()->url) }}" alt="" class="main-image">
+                <img id="main-image" src="{{$vehicle->image_1}}" alt="" class="main-image">
                
                 <div class="thumbnail-container">
                     @foreach($vehicle->images as $image)
@@ -252,21 +252,47 @@
                     <span class="text-2xl font-semibold text-gray-900 mr-4">Rs.{{$vehicle->daily_rate}} / Day</span>
                 </div>
                 
-                <p class="text-gray-600 mb-3">
-                    Engine Type: {{ $vehicle->engine }}
-                </p>
-                <p class="text-gray-600 mb-3">
-                    Fuel Efficiency: Approximately {{$vehicle->fuel_efficiency}} km/l
-                </p>
-                <p class="text-gray-600 mb-3">
-                    Continuously Variable Transmission (CVT)
-                </p>
-                <p class="text-gray-600 mb-3">
-                    Seating Capacity: {{$vehicle->seats}} passengers
-                </p>
-                <p class="text-gray-600 mb-8">
-                    Fuel Type: {{ $vehicle->fuel }}
-                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">directions_car</span>
+                        <span class="text-gray-700 text-sm font-medium">Reg No: {{ $vehicle->registration_number }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">branding_watermark</span>
+                        <span class="text-gray-700 text-sm font-medium">Brand: {{ $vehicle->brand }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">model_training</span>
+                        <span class="text-gray-700 text-sm font-medium">Model: {{ $vehicle->model }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">calendar_today</span>
+                        <span class="text-gray-700 text-sm font-medium">Year: {{ $vehicle->year }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">palette</span>
+                        <span class="text-gray-700 text-sm font-medium">Color: {{ $vehicle->color }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">local_gas_station</span>
+                        <span class="text-gray-700 text-sm font-medium">Fuel: {{ $vehicle->fuel_type }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">event_seat</span>
+                        <span class="text-gray-700 text-sm font-medium">Seats: {{ $vehicle->seats }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">settings</span>
+                        <span class="text-gray-700 text-sm font-medium">Transmission: {{ $vehicle->engine }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-white rounded-lg shadow-sm p-3">
+                        <span class="material-icons text-indigo-600">speed</span>
+                        <span class="text-gray-700 text-sm font-medium">Efficiency: ~{{ $vehicle->fuel_efficiency }} km/unit</span>
+                    </div>
+                </div>
+                <!-- Add this in your <head> if not already present -->
+                <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+         
                 
                 <!-- Quantity and Add to Cart -->
                 <div class="mb-8">
@@ -287,7 +313,7 @@
                         <div class="form-group">
                             <label for="pickup-time">Pick-Up Time</label>
                             <div class="time-select">
-                                <select id="pickup-time" class="form-control">
+                                <select id="pickup-time" class="form-control" name="pickuptime">
                                     <option value="08:00">08:00 AM</option>
                                     <option value="09:00">09:00 AM</option>
                                     <option value="10:00">10:00 AM</option>
@@ -318,7 +344,7 @@
                         <div class="form-group">
                             <label for="dropoff-time">Drop-Off Time</label>
                             <div class="time-select">
-                                <select id="dropoff-time" class="form-control">
+                                <select id="dropoff-time" class="form-control" name="dropofftime">
                                     <option value="08:00">08:00 AM</option>
                                     <option value="09:00">09:00 AM</option>
                                     <option value="10:00">10:00 AM</option>
@@ -353,7 +379,7 @@
                     <ul>
                         @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
-                        @endforeach
+                @endforeach
                     </ul>
                 </div>
                 @endif

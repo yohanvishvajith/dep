@@ -122,26 +122,6 @@ class VehicleResource extends Resource
                 ->maxItems(4) // Limits to maximum 4 images
                 ->helperText('Maximum 4 images allowed') // Optional helper text
                 ,
-        
-         
-        
-                Forms\Components\TextInput::make('mileage')
-                ->label('Mileage (km)')
-                ->numeric()
-                ->minValue(0)
-                ->required()
-                ->maxValue(200000)
-                ->step(1)
-                
-                ->rules([
-                    'integer',
-                    'min:0',
-                    'max:1000000'
-                ])
-                ->suffix(' km')
-                ->default(0)
-                ->helperText('Current vehicle mileage in kilometers'),
-        
                 Forms\Components\TextInput::make('fuel_efficiency')
     ->label('Efficiency')
     ->numeric()
@@ -158,7 +138,7 @@ class VehicleResource extends Resource
     ->helperText('Fuel consumption in kilometers per one unit'),
 
      Forms\Components\Toggle::make('is_available')
-                ->label('Is Available')
+                ->label('Is Available')  
                 ->default(true),
 
             Forms\Components\TextInput::make('daily_rate')

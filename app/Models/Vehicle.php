@@ -30,7 +30,7 @@ class Vehicle extends Model
         'seats',
         'engine',
         'registration_number',
-        'mileage',
+      
         'daily_rate',
         'is_available'
     ];

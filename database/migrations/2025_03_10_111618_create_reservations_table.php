@@ -14,8 +14,8 @@ return new class extends Migration
             //foreign ey vehicle id from vehicles table
             $table->unsignedBigInteger('vehicle_id'); // vehicle_id without foreign key
             //$table->foreign('vehicle_id')->references('vehicle_id')->on('vehicles')->onDelete('cascade');
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
             $table->decimal('total_cost', 10, 2);
             $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending');
             $table->timestamps();

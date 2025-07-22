@@ -13,7 +13,18 @@
                 Whether you're looking for economy, comfort, or luxury, we have the perfect vehicle for your journey.
             </p>
         </div>
-
+        <!-- Search Bar Section -->
+        <div class="mb-12">
+            <form action="{{ route('vehicles.search') }}" method="GET" class="flex items-center justify-center">
+            <div class="flex flex-col md:flex-row gap-4 w-full max-w-2xl">
+                <input type="datetime-local" name="start_date" class="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Start Date">
+                <input type="datetime-local" name="end_date" class="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="End Date">
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                Search
+                </button>
+            </div>
+            </form>
+        </div>
         <!-- Vehicle Grid Section -->
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             @foreach($vehicles as $vehicle)

@@ -1,4 +1,3 @@
-@include('components.chat-widget')
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -1528,6 +1527,7 @@
 
 <body
     class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col  ">
+    @include('components.chat-widget')
     @include('includes.nav')
     @yield('content')
     @include('includes.footer')
@@ -1535,9 +1535,12 @@
     @stack('modals')
     @livewireScripts
     <script src="{{ asset('js/chat-widget.js') }}"></script>
-
     <!-- Toastr JS -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>   
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 

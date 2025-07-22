@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('seats')->nullable();
             $table->string('engine', 50);
             $table->string('registration_number', 20)->unique();
-            $table->integer('mileage')->nullable();
+        
             $table->decimal('daily_rate', 10, 2);
             $table->boolean('is_available')->default(true);
             $table->timestamps();

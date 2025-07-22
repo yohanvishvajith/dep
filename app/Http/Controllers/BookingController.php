@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 
@@ -14,6 +15,8 @@ public function CreateBooking(Request $request)
     $validatedData = $request->validate([
         'pickupdate' => 'required|date',
         'dropoffdate' => 'required|date|after_or_equal:pickupdate',
+        'pickuptime' => 'required',
+        'dropofftime' => 'required',
         'daily_rate' => 'required|numeric',
         'vehicle_id' => 'required|exists:vehicles,vehicle_id'
     ]);
@@ -40,18 +43,18 @@ public function CreateBooking(Request $request)
     $days = Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1;
     $totalCost = $validatedData['daily_rate'] * $days;
 
-    // Create reservation
-    if (!auth()->check()) {
+    if (!Auth::check()) {
         return redirect()->back()->with('error2', 'You must be logged in to make a reservation.');
     }
     $reservationData = [
-        'user_id'     => auth()->user()->id,
+        'user_id'     => Auth::user()->id,
         'vehicle_id'  => $validatedData['vehicle_id'],
-        'start_date'  => $startDate,
-        'end_date'    => $endDate,
+        'start_date'  => $startDate . ' ' . $validatedData['pickuptime'],
+        'end_date'    => $endDate. ' ' . $validatedData['dropofftime'],
         'total_cost'  => $totalCost,
         'status'      => 'pending',
     ];
+    
 
     $result = Reservation::create($reservationData);
 
@@ -60,7 +63,7 @@ public function CreateBooking(Request $request)
     //     'total_cost' => $result->total_cost
     // ]);
  return redirect()->route('stripe.checkout', [
-    'price' => $reservationData['total_cost'], 
+    'price' => $reservationData['total_cost'],
     'product' => $reservationData['vehicle_id']// or whatever field contains the vehicle name
 ]);
 }

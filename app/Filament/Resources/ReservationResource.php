@@ -59,64 +59,140 @@ class ReservationResource extends Resource
                     if ($vehicle = Vehicle::find($state)) {
                         $set('daily_rate', $vehicle->daily_rate);
                     }
+                    // Clear dates when vehicle changes
+                    $set('start_date', null);
+                    $set('end_date', null);
+                    $set('total_cost', 0);
                 }),
-// In your form schema:
-    DatePicker::make('start_date')
-    ->label('Start Date')
-    ->default(now()->toDateString())
-    ->minDate(now()->toDateString())
-    ->required()
-    ->live()
-    ->afterStateUpdated(function (Set $set) {
-        $set('end_date', null);
-    }),
 
-    DatePicker::make('end_date')
-    ->label('End Date')
-    ->required()
-    ->minDate(function (Get $get) {
-        return $get('start_date') ?: now()->toDateString();
-    })
-    ->rules([
-        function (Get $get) {
-            return function (string $attribute, $value, Closure $fail) use ($get) {
-                if ($get('start_date') && $value < $get('start_date')) {
-                    $fail('The end date must be after the start date.');
-                }
-            };
-        }
-    ])
-    ->helperText('Must be after start date')
-    ->live()
-    ->afterStateUpdated(function (Set $set, Get $get) {
-        $startDate = $get('start_date');
-        $endDate = $get('end_date');
-        $dailyRate = $get('daily_rate');
-    
-        if ($startDate && $endDate && $dailyRate) {
-            $days = (new \DateTime($endDate))->diff(new \DateTime($startDate))->days;
-            $days++;
-            $set('total_cost', $days * $dailyRate);
-        } else {
-            $set('total_cost', 0);
-        }
-    }),
+                Forms\Components\DateTimePicker::make('start_date')
+                    ->label('Start Date')
+                    ->default(now()->toDateString())
+                    ->minDate(now()->toDateString())
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function (Set $set) {
+                        $set('end_date', null);
+                        $set('total_cost', 0);
+                    })
+                    ->rules([
+                        function (Get $get) {
+                            return function (string $attribute, $value, Closure $fail) use ($get) {
+                                $vehicleId = $get('vehicle_id');
+                                $endDate = $get('end_date');
+                                
+                                if ($vehicleId && $value) {
+                                    // Check for overlapping reservations
+                                    $query = Reservation::where('vehicle_id', $vehicleId)
+                                        ->where('status', '!=', 'cancelled')
+                                        ->where(function ($q) use ($value, $endDate) {
+                                            if ($endDate) {
+                                                // Check if new reservation overlaps with existing ones
+                                                $q->where(function ($subQ) use ($value, $endDate) {
+                                                    $subQ->whereBetween('start_date', [$value, $endDate])
+                                                        ->orWhereBetween('end_date', [$value, $endDate])
+                                                        ->orWhere(function ($innerQ) use ($value, $endDate) {
+                                                            $innerQ->where('start_date', '<=', $value)
+                                                                ->where('end_date', '>=', $endDate);
+                                                        });
+                                                });
+                                            }
+                                        });
+                                    
+                                    // Exclude current record when editing
+                                    if ($recordId = request()->route('record')) {
+                                        $query->where('reservation_id', '!=', $recordId);
+                                    }
+                                    
+                                    if ($query->exists()) {
+                                        $fail('This vehicle is already reserved for the selected date range.');
+                                    }
+                                }
+                            };
+                        }
+                    ]),
 
-Forms\Components\TextInput::make('total_cost')
-    ->label('Total Cost')
-    ->reactive()
-  ,
+                 Forms\Components\DateTimePicker::make('end_date')
+                    ->label('End Date')
+                    ->required()
+                    ->minDate(function (Get $get) {
+                        return $get('start_date') ?: now()->toDateString();
+                    })
+                    ->rules([
+                        function (Get $get) {
+                            return function (string $attribute, $value, Closure $fail) use ($get) {
+                                $startDate = $get('start_date');
+                                $vehicleId = $get('vehicle_id');
+                                
+                                // Check if end date is after start date
+                                if ($startDate && $value < $startDate) {
+                                    $fail('The end date must be after the start date.');
+                                }
+                                
+                                // Check for overlapping reservations
+                                if ($vehicleId && $startDate && $value) {
+                                    $query = Reservation::where('vehicle_id', $vehicleId)
+                                        ->where('status', '!=', 'cancelled')
+                                        ->where(function ($q) use ($startDate, $value) {
+                                            // Check if new reservation overlaps with existing ones
+                                            $q->where(function ($subQ) use ($startDate, $value) {
+                                                $subQ->whereBetween('start_date', [$startDate, $value])
+                                                    ->orWhereBetween('end_date', [$startDate, $value])
+                                                    ->orWhere(function ($innerQ) use ($startDate, $value) {
+                                                        $innerQ->where('start_date', '<=', $startDate)
+                                                            ->where('end_date', '>=', $value);
+                                                    });
+                                            });
+                                        });
+                                    
+                                    // Exclude current record when editing
+                                    if ($recordId = request()->route('record')) {
+                                        $query->where('reservation_id', '!=', $recordId);
+                                    }
+                                    
+                                    if ($query->exists()) {
+                                        $fail('This vehicle is already reserved for the selected date range.');
+                                    }
+                                }
+                            };
+                        }
+                    ])
+                    ->helperText('Must be after start date')
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, Get $get) {
+                        $startDate = $get('start_date');
+                        $endDate = $get('end_date');
+                        $dailyRate = $get('daily_rate');
+                    
+                        if ($startDate && $endDate && $dailyRate) {
+                            $days = (new \DateTime($endDate))->diff(new \DateTime($startDate))->days;
+                            $days++;
+                            $set('total_cost', $days * $dailyRate);
+                        } else {
+                            $set('total_cost', 0);
+                        }
+                    }),
 
-        // Status (dropdown)
-        Select::make('status')
-            ->label('Status')
-            ->options([
-                'pending' => 'Pending',
-                'confirmed' => 'Confirmed',
-                'cancelled' => 'Cancelled',
-            ])
-            ->default('pending')
-            ->required(),
+                Forms\Components\TextInput::make('daily_rate')
+                    ->label('Daily Rate')
+                    ->readOnly()
+                    ->prefix('LKR')
+                    ->disabled(true),
+
+                Forms\Components\TextInput::make('total_cost')
+                    ->label('Total Cost')
+                    ->readOnly()
+                    ->prefix('LKR'),
+
+                Select::make('status')
+                    ->label('Status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'confirmed' => 'Confirmed',
+                        'cancelled' => 'Cancelled',
+                    ])
+                    ->default('pending')
+                    ->required(),
             ]);
     }
 
@@ -152,13 +228,13 @@ Forms\Components\TextInput::make('total_cost')
               TextColumn::make('start_date')
                   ->label('Start Date')
                   ->default(now()->toDateString())
-                  ->date()
+                    ->dateTime()
                   ->sortable(),
   
               // End Date
               TextColumn::make('end_date')
                   ->label('End Date')
-                  ->date()
+                  ->dateTime()
                   ->sortable(),
   
               // Total Cost
@@ -180,42 +256,18 @@ Forms\Components\TextInput::make('total_cost')
                   }),
             ])
             ->filters([
-    Filter::make('end_date_today')
-        ->label('Today Completed')
-        ->query(fn (Builder $query) => $query->whereDate('end_date', now()->toDateString())),
-    
-    SelectFilter::make('status')
-        ->label('Status')
-        ->options([
-            'pending' => 'Pending',
-            'confirmed' => 'Confirmed',
-            'cancelled' => 'Cancelled',
-        ]),
-    
-    // Filter::make('date_range')
-    //     ->label('Date Range')
-    //     ->form([
-    //         DatePicker::make('start_date')
-    //                ->label('Start Date')
-    //             ->default('2025-01-01')
-    //             ->displayFormat('Y-m-d') // Explicit format
-    //          ,
-    //         DatePicker::make('end_date')
-    //             ->label('End Date')
-    //                      ->default('2025-01-01') ,
-    //     ])
-    //     ->query(function (Builder $query, array $data) {
-    //         return $query
-    //             ->when(
-    //                 $data['start_date'],
-    //                 fn (Builder $query, $date) => $query->whereDate('start_date', '>=', $date)
-    //             )
-    //             ->when(
-    //                 $data['end_date'],
-    //                 fn (Builder $query, $date) => $query->whereDate('end_date', '<=', $date)
-    //             );
-    //     })
-]) // This closes the filters array
+                Filter::make('end_date_today')
+                    ->label('Today Completed')
+                    ->query(fn (Builder $query) => $query->whereDate('end_date', now()->toDateString())),
+                
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'confirmed' => 'Confirmed',
+                        'cancelled' => 'Cancelled',
+                    ]),
+            ]) 
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
